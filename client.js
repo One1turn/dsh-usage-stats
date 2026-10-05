@@ -17,8 +17,8 @@ window.__ModuleLoader__.load({
 .dshus-headrow { display: flex; align-items: center; gap: 12px; }
 .dshus-title { font-size: 18px; font-weight: 600; color: var(--dsw-alias-label-primary); margin: 0; }
 .dshus-badge { font-size: 12px; color: var(--dsw-alias-label-secondary); border: 1px solid var(--dsw-alias-border-l2); border-radius: 999px; padding: 3px 10px; background: var(--dsw-alias-bg-layer-1); }
-.dshus-cards { display: flex; border: 1px solid var(--dsw-alias-settings-card-stroke, var(--dsw-alias-border-l2)); border-radius: 14px; background: var(--dsw-alias-bg-layer-1); padding: 16px 8px; }
-.dshus-card-cell { flex: 1 1 0; min-width: 0; text-align: center; padding: 2px 6px; }
+.dshus-cards { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border: 1px solid var(--dsw-alias-settings-card-stroke, var(--dsw-alias-border-l2)); border-radius: 14px; background: var(--dsw-alias-bg-layer-1); padding: 16px 8px; }
+.dshus-card-cell { min-width: 0; text-align: center; padding: 2px 4px; }
 .dshus-card-cell + .dshus-card-cell { border-left: 1px solid var(--dsw-alias-border-l2); }
 .dshus-card-num { font-size: 17px; font-weight: 700; color: var(--dsw-alias-label-primary); white-space: nowrap; }
 .dshus-card-label { font-size: 11px; color: var(--dsw-alias-label-tertiary); margin-top: 4px; white-space: nowrap; }
@@ -29,7 +29,7 @@ window.__ModuleLoader__.load({
 .dshus-seg-item { border: none; background: transparent; color: var(--dsw-alias-label-secondary); font-size: 12px; padding: 4px 12px; border-radius: 999px; cursor: pointer; white-space: nowrap; }
 .dshus-seg-item[data-active="true"] { background: var(--dsw-alias-bg-layer-1); color: var(--dsw-alias-label-primary); box-shadow: 0 1px 3px rgba(0,0,0,.3); }
 .dshus-rangelabel { font-size: 14px; color: var(--dsw-alias-label-primary); }
-.dshus-heat { width: 100%; overflow-x: auto; }
+.dshus-heat { width: 100%; }
 .dshus-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--dsw-alias-label-secondary); margin-bottom: 8px; }
 .dshus-legend-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; vertical-align: 1px; }
 .dshus-trendbox { position: relative; }
@@ -72,7 +72,7 @@ window.__ModuleLoader__.load({
       if (min < 1) return "不到 1 分钟";
       const h = Math.floor(min / 60);
       const m = min % 60;
-      return h ? `${h} 小时 ${m} 分钟` : `${m} 分钟`;
+      return h ? `${h}小时${m}分` : `${m} 分钟`;
     }
     function dayLabelCN(day) {
       const [, m, d] = day.split("-").map(Number);
@@ -144,7 +144,7 @@ window.__ModuleLoader__.load({
         ? `${x.day} 累计 ${fmtTokens(x._acc ?? 0)} tokens`
         : `${x.day} ${fmtTokens(x.tokens)} tokens`;
       return h("div", { className: "dshus-heat" },
-        h("svg", { width: "100%", viewBox: `0 0 ${width} ${height}`, preserveAspectRatio: "xMinYMin meet", style: { display: "block", minWidth: Math.min(width, 540) } },
+        h("svg", { width: "100%", viewBox: `0 0 ${width} ${height}`, preserveAspectRatio: "xMinYMin meet", style: { display: "block" } },
           h("g", null,
             cols.map((c, ci) =>
               c.days.map((x, ri) => {
