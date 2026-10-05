@@ -279,6 +279,7 @@ window.__ModuleLoader__.load({
     // ── 环形图 ─────────────────────────────────────────────────────────────
     function Donut({ data }) {
       const [hover, setHover] = useState(null);
+      const [tipPos, setTipPos] = useState({ x: 0, y: 0 });
       const boxRef = useRef(null);
       const items = data.donut.filter((x) => x.tokens > 0);
       const total = data.rangeTotal;
@@ -306,6 +307,7 @@ window.__ModuleLoader__.load({
           acc += segs[i].frac;
         }
         setHover(idx);
+        setTipPos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
       }, [segs]);
       if (!items.length || !total) return h('div', { className: 'dshus-empty' }, '所选范围内暂无用量');
       return h('div', { className: 'dshus-donutrow' },
@@ -324,7 +326,16 @@ window.__ModuleLoader__.load({
             h('text', { x: 95, y: 92, textAnchor: 'middle', fontSize: 20, fontWeight: 700, fill: 'var(--dsw-alias-label-primary)' }, fmtTokens(total)),
             h('text', { x: 95, y: 112, textAnchor: 'middle', fontSize: 12, fill: 'var(--dsw-alias-label-tertiary)' }, 'tokens'),
           ),
-          hover != null ? h('div', { className: 'dshus-tip', style: { left: '50%', top: 8, transform: 'translateX(-50%)', minWidth: 170 } },
+          hover != null ? h('div', { className: 'dshus-tip', style: (() => {
+            const w = boxRef.current?.parentElement?.clientWidth ?? 520;
+            const flipX = tipPos.x > w - 240;
+            const flipY = tipPos.y > 260;
+            return {
+              left: `${Math.max(4, (flipX ? tipPos.x - 224 : tipPos.x + 16))}px`,
+              top: `${Math.max(4, (flipY ? tipPos.y - 96 : tipPos.y + 16))}px`,
+              minWidth: 190,
+            };
+          })() },
             h('div', { className: 'dshus-tip-title' },
               h('span', { className: 'dshus-legend-dot', style: { background: segs[hover].color, marginRight: 6 } }),
               segs[hover].name,
