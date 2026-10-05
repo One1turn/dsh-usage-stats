@@ -1,0 +1,13 @@
+<svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="dshus-bars-grad-file" x1="4" y1="20" x2="20" y2="6" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#4D6BFE"/>
+      <stop offset="1" stop-color="#22D3EE"/>
+    </linearGradient>
+  </defs>
+  <g stroke="url(#dshus-bars-grad-file)" stroke-width="2.2" stroke-linecap="round">
+    <path d="M5 20v-6"/>
+    <path d="M12 20V5"/>
+    <path d="M19 20v-10"/>
+  </g>
+</svg>

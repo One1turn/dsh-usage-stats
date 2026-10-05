@@ -1,0 +1,19 @@
+{
+  "name": "@local/dsh-usage-stats",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "ZCode-style usage statistics for DeepSeek Harness: token totals, activity heatmap, per-model daily trend, model donut — aggregated from local session logs.",
+  "icon": "./icon.svg",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./package.json": "./package.json",
+    "./locale/*.json": "./locale/*.json"
+  },
+  "files": ["index.js", "client.js", "icon.svg", "locale/*.json"],
+  "dsh": {
+    "bundle": { "patch": "./cordis.patch.yml" },
+    "client": { "platform": "web" }
+  }
+}
