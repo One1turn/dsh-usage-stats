@@ -278,39 +278,77 @@ window.__ModuleLoader__.load({
 
     // ── 环形图 ─────────────────────────────────────────────────────────────
     function Donut({ data }) {
+      const [hover, setHover] = useState(null);
+      const boxRef = useRef(null);
       const items = data.donut.filter((x) => x.tokens > 0);
       const total = data.rangeTotal;
-      if (!items.length || !total) return h("div", { className: "dshus-empty" }, "所选范围内暂无用量");
       const R = 74, C = 2 * Math.PI * R;
-      let acc = 0;
+      let accF = 0;
       const segs = items.map((x, i) => {
-        const frac = x.tokens / total;
-        const seg = { ...x, color: PALETTE[i % PALETTE.length], dash: frac * C, offset: acc * C };
-        acc += frac;
+        const frac = total ? x.tokens / total : 0;
+        const seg = { ...x, color: PALETTE[i % PALETTE.length], dash: frac * C, offset: accF * C, frac };
+        accF += frac;
         return seg;
       });
-      return h("div", { className: "dshus-donutrow" },
-        h("svg", { width: 190, height: 190, viewBox: "0 0 190 190", style: { flex: "0 0 auto" } },
-          h("g", { transform: "rotate(-90 95 95)" },
-            segs.map((s) => h("circle", {
-              key: s.name,
-              cx: 95, cy: 95, r: R, fill: "none",
-              stroke: s.color, strokeWidth: 26,
-              strokeDasharray: `${Math.max(0, s.dash - 2)} ${C - Math.max(0, s.dash - 2)}`,
-              strokeDashoffset: -s.offset,
-            })),
-          ),
-          h("text", { x: 95, y: 92, textAnchor: "middle", fontSize: 20, fontWeight: 700, fill: "var(--dsw-alias-label-primary)" }, fmtTokens(total)),
-          h("text", { x: 95, y: 112, textAnchor: "middle", fontSize: 12, fill: "var(--dsw-alias-label-tertiary)" }, "tokens"),
-        ),
-        h("div", { className: "dshus-donut-legend" },
-          data.donut.map((x, i) => h("div", { key: x.name, className: "dshus-dl-row" },
-            h("span", { className: "dshus-dl-dot", style: { background: PALETTE[i % PALETTE.length] } }),
-            h("div", { style: { minWidth: 0 } },
-              h("div", { className: "dshus-dl-name" }, x.name),
-              h("div", { className: "dshus-dl-sub" }, `${fmtTokens(x.tokens)} tokens`),
+      const onMove = useCallback((e) => {
+        const rect = boxRef.current?.getBoundingClientRect();
+        if (!rect) return;
+        const x = e.clientX - rect.left - 95;
+        const y = e.clientY - rect.top - 95;
+        const dist = Math.hypot(x, y);
+        if (dist < R - 16 || dist > R + 16) { setHover(null); return; }
+        let ang = Math.atan2(y, x) + Math.PI / 2;
+        if (ang < 0) ang += Math.PI * 2;
+        const frac = ang / (Math.PI * 2);
+        let acc = 0; let idx = null;
+        for (let i = 0; i < segs.length; i += 1) {
+          if (frac >= acc && frac < acc + segs[i].frac) { idx = i; break; }
+          acc += segs[i].frac;
+        }
+        setHover(idx);
+      }, [segs]);
+      if (!items.length || !total) return h('div', { className: 'dshus-empty' }, '所选范围内暂无用量');
+      return h('div', { className: 'dshus-donutrow' },
+        h('div', { ref: boxRef, style: { position: 'relative', flex: '0 0 auto' }, onMouseMove: onMove, onMouseLeave: () => setHover(null) },
+          h('svg', { width: 190, height: 190, viewBox: '0 0 190 190' },
+            h('g', { transform: 'rotate(-90 95 95)' },
+              segs.map((sg, i) => h('circle', {
+                key: sg.name + i,
+                cx: 95, cy: 95, r: R, fill: 'none',
+                stroke: sg.color, strokeWidth: hover === i ? 30 : 26,
+                strokeDasharray: `${Math.max(0, sg.dash - 2)} ${C - Math.max(0, sg.dash - 2)}`,
+                strokeDashoffset: -sg.offset,
+                style: { transition: 'stroke-width .12s ease', cursor: 'pointer', opacity: hover == null || hover === i ? 1 : 0.55 },
+              })),
             ),
-            h("span", { className: "dshus-dl-pct" }, `${x.pct.toFixed(1)}%`),
+            h('text', { x: 95, y: 92, textAnchor: 'middle', fontSize: 20, fontWeight: 700, fill: 'var(--dsw-alias-label-primary)' }, fmtTokens(total)),
+            h('text', { x: 95, y: 112, textAnchor: 'middle', fontSize: 12, fill: 'var(--dsw-alias-label-tertiary)' }, 'tokens'),
+          ),
+          hover != null ? h('div', { className: 'dshus-tip', style: { left: '50%', top: 8, transform: 'translateX(-50%)', minWidth: 170 } },
+            h('div', { className: 'dshus-tip-title' },
+              h('span', { className: 'dshus-legend-dot', style: { background: segs[hover].color, marginRight: 6 } }),
+              segs[hover].name,
+            ),
+            h('div', { className: 'dshus-tip-row' },
+              h('span', { className: 'dshus-tip-name' }, 'tokens'),
+              h('span', null, fmtTokens(segs[hover].tokens)),
+            ),
+            h('div', { className: 'dshus-tip-row' },
+              h('span', { className: 'dshus-tip-name' }, '占比'),
+              h('span', null, `${segs[hover].pct.toFixed(1)}%`),
+            ),
+          ) : null,
+        ),
+        h('div', { className: 'dshus-donut-legend' },
+          data.donut.map((x, i) => h('div', { key: x.name, className: 'dshus-dl-row', style: { opacity: hover == null || hover === i ? 1 : 0.5, cursor: 'pointer' },
+              onMouseEnter: () => setHover(items.findIndex((it) => it.name === x.name)),
+              onMouseLeave: () => setHover(null) },
+            h('span', { className: 'dshus-dl-dot', style: { background: PALETTE[i % PALETTE.length] } }),
+            h('div', { style: { minWidth: 0 } },
+              h('div', { className: 'dshus-dl-name' }, x.name),
+              h('div', { className: 'dshus-dl-sub' }, `${fmtTokens(x.tokens)} tokens`),
+            ),
+            h('span', { className: 'dshus-dl-pct' }, `${x.pct.toFixed(1)}%`),
           )),
         ),
       );

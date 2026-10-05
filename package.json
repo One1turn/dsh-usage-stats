@@ -1,6 +1,6 @@
 {
   "name": "@local/dsh-usage-stats",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "private": true,
   "type": "module",
   "description": "ZCode-style usage statistics for DeepSeek Harness: token totals, activity heatmap, per-model daily trend, model donut — aggregated from local session logs.",

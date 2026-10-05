@@ -246,7 +246,20 @@ export function apply(ctx, config = {}) {
 
   async function summary(range) {
     const agg = await getAggregate();
-    const daily = agg.daily;
+    const daily = { ...agg.daily };
+    // 叠加迁移用量（会话迁移插件写入 migrated-usage.json）：累计/热力/趋势/环形全部包含
+    let migratedTokens = 0;
+    try {
+      const mig = JSON.parse(await fs.readFile(path.join(path.dirname(cacheFile), 'migrated-usage.json'), 'utf8'));
+      for (const [day, d] of Object.entries(mig.daily ?? {})) {
+        let e = daily[day];
+        if (!e) { e = { tokens: 0, byModel: {} }; daily[day] = e; }
+        e.tokens += d.tokens ?? 0;
+        for (const [m, v] of Object.entries(d.byModel ?? {})) e.byModel[m] = (e.byModel[m] ?? 0) + v;
+        migratedTokens += d.tokens ?? 0;
+      }
+    } catch {}
+    delete daily.__noop;
     const allDays = Object.keys(daily);
     const totalTokens = allDays.reduce((s, d) => s + daily[d].tokens, 0);
     const peakDay = allDays.reduce((best, d) => (daily[d].tokens > (daily[best]?.tokens ?? 0) ? d : best), allDays[0] ?? "");
@@ -288,6 +301,7 @@ export function apply(ctx, config = {}) {
       donut,
       rangeTotal,
       sessionCount: agg.sessionCount,
+      migratedTokens,
       generatedAt: Date.now(),
     };
   }
